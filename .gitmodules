@@ -1,0 +1,4 @@
+[submodule "NTT-RTL-gen"]
+	path = NTT-RTL-gen
+	url = git@github.com:CubeMan940331/NTT-RTL-gen.git
+	branch = OpenNTT-BTcore
