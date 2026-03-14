@@ -1,5 +1,6 @@
 VERILATOR ?= verilator
 ROOT      := $(abspath .)
+ROOT_PARENT := $(abspath $(ROOT)/..)
 
 TOP     ?= PipelineNTT_top
 MODE    ?= dit
@@ -11,28 +12,46 @@ TB_CPP  := $(ROOT)/testbench.cpp
 MDIR    := obj_dir/$(MODE)
 BIN     := $(MDIR)/V$(TOP)
 
+NTT_SUBMODULE_ROOT := $(ROOT)/NTT-RTL-gen
+NTT_SIBLING_ROOT   := $(ROOT_PARENT)/NTT-RTL-gen
+
+ifneq ($(wildcard $(NTT_SUBMODULE_ROOT)/rtl/ct_bf_openntt.sv),)
+NTT_ROOT := $(NTT_SUBMODULE_ROOT)
+else ifneq ($(wildcard $(NTT_SIBLING_ROOT)/rtl/ct_bf_openntt.sv),)
+NTT_ROOT := $(NTT_SIBLING_ROOT)
+else
+$(error NTT-RTL-gen not found. Initialize submodule with "git submodule update --init --recursive", or place repo at ../NTT-RTL-gen)
+endif
+
+NTT_BASE := $(abspath $(NTT_ROOT)/..)
+
 OPENNTT_REL_SRCS := \
-	NTT-RTL-gen/rtl/ct_bf_openntt.sv \
-	NTT-RTL-gen/rtl/gs_bf_openntt.sv \
-	NTT-RTL-gen/rtl/OpenNTT/intmul_pkg.sv \
-	NTT-RTL-gen/rtl/OpenNTT/shiftreg.sv \
-	NTT-RTL-gen/rtl/OpenNTT/divby2.sv \
-	NTT-RTL-gen/rtl/OpenNTT/modadd.sv \
-	NTT-RTL-gen/rtl/OpenNTT/modsub.sv \
-	NTT-RTL-gen/rtl/OpenNTT/modred.sv \
-	NTT-RTL-gen/rtl/OpenNTT/intmul.sv \
-	NTT-RTL-gen/rtl/OpenNTT/btf_addsub.sv \
-	NTT-RTL-gen/rtl/OpenNTT/btf_modmul.sv \
-	NTT-RTL-gen/rtl/OpenNTT/btf_uni.sv \
-	NTT-RTL-gen/rtl/OpenNTT/modred_wl_mont/int_mult_add_p0.sv \
-	NTT-RTL-gen/rtl/OpenNTT/modred_wl_mont/wlmont.sv \
-	NTT-RTL-gen/rtl/OpenNTT/modred_wl_mont/wlmont_sub_p0.sv
-OPENNTT_SRCS := $(addprefix $(ROOT)/,$(OPENNTT_REL_SRCS))
+	rtl/ct_bf_openntt.sv \
+	rtl/gs_bf_openntt.sv \
+	rtl/OpenNTT/intmul_pkg.sv \
+	rtl/OpenNTT/shiftreg.sv \
+	rtl/OpenNTT/divby2.sv \
+	rtl/OpenNTT/modadd.sv \
+	rtl/OpenNTT/modsub.sv \
+	rtl/OpenNTT/modred.sv \
+	rtl/OpenNTT/intmul.sv \
+	rtl/OpenNTT/btf_addsub.sv \
+	rtl/OpenNTT/btf_modmul.sv \
+	rtl/OpenNTT/btf_uni.sv \
+	rtl/OpenNTT/modred_wl_mont/int_mult_add_p0.sv \
+	rtl/OpenNTT/modred_wl_mont/wlmont.sv \
+	rtl/OpenNTT/modred_wl_mont/wlmont_sub_p0.sv
+OPENNTT_SRCS := $(addprefix $(NTT_ROOT)/,$(OPENNTT_REL_SRCS))
+
+GEN_NTT_SRCS := \
+	$(NTT_ROOT)/rtl-gen/dit_ntt.v \
+	$(NTT_ROOT)/rtl-gen/dif_ntt.v
 
 VERILATOR_FLAGS := \
 	-j 0 \
 	--cc --exe --build \
 	--default-language 1800-2017 \
+	-I$(NTT_BASE) \
 	-Wno-fatal \
 	-Wno-TIMESCALEMOD \
 	-Wno-WIDTHEXPAND \
@@ -61,7 +80,13 @@ all: run
 
 build: $(BIN)
 
-$(BIN): $(TOP_V) $(TB_CPP) $(OPENNTT_SRCS)
+$(GEN_NTT_SRCS):
+	$(MAKE) -C $(NTT_ROOT) rtl-gen/dit_ntt.v rtl-gen/dif_ntt.v
+
+$(MDIR):
+	mkdir -p $@
+
+$(BIN): $(TOP_V) $(TB_CPP) $(OPENNTT_SRCS) $(GEN_NTT_SRCS) | $(MDIR)
 	$(VERILATOR) $(VERILATOR_FLAGS) $(MODE_DEFINE) $(TOP_V) $(TB_CPP) $(OPENNTT_SRCS)
 
 run: $(BIN)

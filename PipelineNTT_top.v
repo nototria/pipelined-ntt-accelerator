@@ -1,21 +1,30 @@
 `timescale 1ns / 1ps
 
-// Default: DIT core.
-// Compile with -DPIPELINE_NTT_USE_DIF to switch to the DIF core.
-`ifdef PIPELINE_NTT_USE_DIF
 `include "NTT-RTL-gen/rtl-gen/dif_ntt.v"
-`else
 `include "NTT-RTL-gen/rtl-gen/dit_ntt.v"
-`endif
 
 module PipelineNTT_top (
-    input  wire        clk,
+    input  wire          clk,
     input  wire [4095:0] in,
-    output wire [4095:0] out
+    output wire [4095:0] out,
+    output wire [4095:0] dit_out,
+    output wire [4095:0] dif_out
 );
-    ntt u_ntt (
+    dif_ntt u_dif_ntt (
         .clk(clk),
         .in (in),
-        .out(out)
+        .out(dif_out)
     );
+
+    dit_ntt u_dit_ntt (
+        .clk(clk),
+        .in (in),
+        .out(dit_out)
+    );
+
+`ifdef PIPELINE_NTT_USE_DIF
+    assign out = dif_out;
+`else
+    assign out = dit_out;
+`endif
 endmodule
