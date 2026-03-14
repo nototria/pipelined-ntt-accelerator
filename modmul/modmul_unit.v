@@ -5,7 +5,7 @@ module modmul_unit (
     input  wire          clk,
     input  wire [4095:0] a,
     input  wire [4095:0] b,
-    input  wire [4095:0] q,
+    input  wire [31:0]   q,
     output wire [4095:0] product
 );
 
@@ -18,7 +18,7 @@ module modmul_unit (
                 .clk(clk),
                 .a(a[i*32 +: 32]),
                 .b(b[i*32 +: 32]),
-                .q(q[i*32 +: 32]),
+                .q(q),
                 .c(product[i*32 +: 32])
             );
         end

@@ -12,7 +12,7 @@ module tb_modmul_unit;
     reg clk = 1'b0;
     reg [LANES*LOGQ-1:0] a;
     reg [LANES*LOGQ-1:0] b;
-    reg [LANES*LOGQ-1:0] q;
+    reg [31:0] q;
     wire [LANES*LOGQ-1:0] product;
 
     reg [LANES*LOGQ-1:0] exp_pipe [0:LATENCY-1];
@@ -73,7 +73,7 @@ module tb_modmul_unit;
             if (vec_idx == 0) begin
                 a = '0;
                 b = '0;
-                q = {LANES{Q_CONST}};
+                q = Q_CONST;
                 exp_next = '0;
                 val_next = 1'b0;
             end else if (vec_idx <= TEST_VECTORS) begin
@@ -82,14 +82,14 @@ module tb_modmul_unit;
                     rb = $urandom() % Q_CONST;
                     a[lane*LOGQ +: LOGQ] = ra;
                     b[lane*LOGQ +: LOGQ] = rb;
-                    q[lane*LOGQ +: LOGQ] = Q_CONST;
                     exp_next[lane*LOGQ +: LOGQ] = mont_ref(ra, rb);
                 end
+                q = Q_CONST;
                 val_next = 1'b1;
             end else begin
                 a = '0;
                 b = '0;
-                q = {LANES{Q_CONST}};
+                q = Q_CONST;
                 exp_next = '0;
                 val_next = 1'b0;
             end
