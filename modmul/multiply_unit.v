@@ -12,9 +12,9 @@ module multiply_unit (
     localparam integer LOGQ = 32;
     localparam integer WORD_SIZE = 16;
     localparam integer INTMUL_LAT = 1;
-    localparam integer MODRED_L = 2;
+    localparam integer MODRED_L = $ceil(LOGQ/WORD_SIZE);
     localparam integer MODRED_COREMUL_LAT = 1;
-    localparam integer MODRED_LAT = 6;
+    localparam integer MODRED_LAT = 0;
 
     wire [63:0] mul_wide;
 
