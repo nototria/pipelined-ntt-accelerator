@@ -12,6 +12,22 @@ TB_CPP  := $(ROOT)/testbench.cpp
 MDIR    := obj_dir/$(MODE)
 BIN     := $(MDIR)/V$(TOP)
 
+MODMUL_DIR  := $(ROOT)/modmul
+MODMUL_MDIR := obj_dir/modmul
+MODMUL_TB   := $(MODMUL_DIR)/tb_modmul_unit.sv
+MODMUL_BIN  := $(MODMUL_MDIR)/Vtb_modmul_unit
+MODMUL_SRCS := \
+	$(MODMUL_DIR)/modmul_unit.v \
+	$(MODMUL_DIR)/multiply_unit.v \
+	$(MODMUL_DIR)/csa_tree_3to2.sv \
+	$(MODMUL_DIR)/openNTT/intmul_pkg.sv \
+	$(MODMUL_DIR)/openNTT/intmul.sv \
+	$(MODMUL_DIR)/openNTT/modred.sv \
+	$(MODMUL_DIR)/openNTT/shiftreg.sv \
+	$(MODMUL_DIR)/openNTT/modred_wl_mont/int_mult_add_p0.sv \
+	$(MODMUL_DIR)/openNTT/modred_wl_mont/wlmont_sub_p0.sv \
+	$(MODMUL_DIR)/openNTT/modred_wl_mont/wlmont.sv
+
 NTT_SUBMODULE_ROOT := $(ROOT)/NTT-RTL-gen
 NTT_SIBLING_ROOT   := $(ROOT_PARENT)/NTT-RTL-gen
 
@@ -74,7 +90,7 @@ ifneq ($(strip $(CYCLES)),)
 RUN_ARGS += $(CYCLES)
 endif
 
-.PHONY: all build run clean help
+.PHONY: all build run modmul-build modmul-test clean help
 
 all: run
 
@@ -92,6 +108,27 @@ $(BIN): $(TOP_V) $(TB_CPP) $(OPENNTT_SRCS) $(GEN_NTT_SRCS) | $(MDIR)
 run: $(BIN)
 	./$(BIN) $(RUN_ARGS)
 
+modmul-build: $(MODMUL_BIN)
+
+$(MODMUL_MDIR):
+	mkdir -p $@
+
+$(MODMUL_BIN): $(MODMUL_TB) $(MODMUL_SRCS) | $(MODMUL_MDIR)
+	$(VERILATOR) \
+		-j 0 \
+		--binary \
+		--default-language 1800-2017 \
+		-Wno-fatal \
+		-Wno-WIDTHEXPAND \
+		-Wno-WIDTHTRUNC \
+		--Mdir $(MODMUL_MDIR) \
+		-top-module tb_modmul_unit \
+		$(MODMUL_TB) \
+		$(MODMUL_SRCS)
+
+modmul-test: modmul-build
+	./$(MODMUL_BIN)
+
 clean:
 	rm -rf obj_dir
 
@@ -99,4 +136,5 @@ help:
 	@echo "Targets:"
 	@echo "  make build MODE=dit|dif"
 	@echo "  make run MODE=dit|dif [INPUT=path/to/input.hex] [CYCLES=36]"
+	@echo "  make modmul-test"
 	@echo "  make clean"
