@@ -1,56 +1,36 @@
-`timescale 1ns / 1ps
+/*
+    OpenNTT - 2024
+    Florian Krieger, Florian Hirner, Ahmet Can Mert, Sujoy Sinha Roy
+    Contact: florian.krieger@iaik.tugraz.at
+*/
+`timescale 1ns/1ps
 
-// Fixed single-lane 32-bit modular multiplier using WL Montgomery reduction.
-module multiply_unit (
-    input  wire        clk,
-    input  wire [31:0] a,
-    input  wire [31:0] b,
-    input  wire [31:0] q,
-    output wire [31:0] c
+module multiply_unit #
+(
+    parameter LOGQ = 32,
+    parameter [LOGQ-1:0] Q_VALUE = 0, // != 0: q is constant
+    parameter WORD_SIZE = 16, // Last WORD_SIZE digit of q will be 00...001
+    // integer multiplier parameters
+    parameter INTMUL_LAT = 1, // should be at least 1 (valid only if INTMUL_TYPE="")
+    parameter INTMUL_TYPE = "", // options: "", "fpga_auto", "fpga_lut", "fpga_dsp", "custom" (could be fpga IP, fpga-optimized, asic-optimized (i.e., Karatsuba) etc.)
+    // modular reduction parameters
+    parameter MODRED_LAT = 0, 
+	  parameter MODRED_TYPE = "default", // options: "default" (WL Montgomery), "custom", "" (i.e., for sim)
+	  // modular reduction parameters (for default case)
+	  parameter MODRED_L = 2,  // montgomery loop count (calculated as $ceil(LOGQ/WORD_SIZE))
+    parameter MODRED_COREMUL_LAT = 1 // latency of multiply and add units in WL Montgomery	
+)
+(
+    input  clk,
+    input  [LOGQ-1:0] q,
+    input  [LOGQ-1:0] a,b,
+    output [LOGQ-1:0] c
 );
 
-    localparam integer LOGQ = 32;
-    localparam integer WORD_SIZE = 16;
-    localparam integer INTMUL_LAT = 1;
-    localparam integer MODRED_L = $ceil(LOGQ/WORD_SIZE);
-    localparam integer MODRED_COREMUL_LAT = 1;
-    localparam integer MODRED_LAT = 0;
+wire [2*LOGQ-1:0] imul;
 
-    wire [63:0] mul_wide;
-
-    intmul #
-    (
-        .LOG_A(32),
-        .LOG_B(32),
-        .INTMUL_LAT(INTMUL_LAT),
-        .INTMUL_TYPE("")
-    )
-    u_intmul
-    (
-        .clk(clk),
-        .A(a),
-        .B(b),
-        .C(mul_wide)
-    );
-
-    // Output is in WL/Montgomery domain:
-    // c = a*b*R^-1 (mod q)
-    modred #
-    (
-        .LOGQ(LOGQ),
-        .Q_VALUE(32'd0),
-        .WORD_SIZE(WORD_SIZE),
-        .MODRED_LAT(MODRED_LAT),
-        .MODRED_TYPE("default"),
-        .MODRED_L(MODRED_L),
-        .MODRED_COREMUL_LAT(MODRED_COREMUL_LAT)
-    )
-    u_modred
-    (
-        .clk(clk),
-        .P(mul_wide),
-        .q(q),
-        .C(c)
-    );
+// modmul
+intmul #(LOGQ,LOGQ,INTMUL_LAT,INTMUL_TYPE) intmul_i(clk,b,a,imul);
+modred #(LOGQ,Q_VALUE,WORD_SIZE,MODRED_LAT,MODRED_TYPE,MODRED_L,MODRED_COREMUL_LAT) modred_i(clk,imul,q,c);
 
 endmodule
