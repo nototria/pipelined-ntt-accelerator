@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module tb_modmul_unit;
+module tb_ModmulUnit;
     localparam integer LANES = 128;
     localparam integer LOGQ = 32;
     localparam integer LATENCY = 6;
@@ -31,7 +31,7 @@ module tb_modmul_unit;
     reg [31:0] got;
     reg [31:0] exp;
 
-    modmul_unit dut (
+    ModmulUnit dut (
         .clk(clk),
         .a(a),
         .w(w),

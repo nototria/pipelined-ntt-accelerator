@@ -14,11 +14,11 @@ BIN     := $(MDIR)/V$(TOP)
 
 MODMUL_DIR  := $(ROOT)/modmul
 MODMUL_MDIR := obj_dir/modmul
-MODMUL_TB   := $(MODMUL_DIR)/tb_modmul_unit.sv
-MODMUL_BIN  := $(MODMUL_MDIR)/Vtb_modmul_unit
+MODMUL_TB   := $(MODMUL_DIR)/tb_ModmulUnit.sv
+MODMUL_BIN  := $(MODMUL_MDIR)/Vtb_ModmulUnit
 MODMUL_SRCS := \
-	$(MODMUL_DIR)/modmul_unit.v \
-	$(MODMUL_DIR)/multiply_unit.v \
+	$(MODMUL_DIR)/ModmulUnit.v \
+	$(MODMUL_DIR)/MultiplyUnit.v \
 	$(MODMUL_DIR)/csa_tree_3to2.sv \
 	$(MODMUL_DIR)/openNTT/intmul_pkg.sv \
 	$(MODMUL_DIR)/openNTT/intmul.sv \
@@ -122,7 +122,7 @@ $(MODMUL_BIN): $(MODMUL_TB) $(MODMUL_SRCS) | $(MODMUL_MDIR)
 		-Wno-WIDTHEXPAND \
 		-Wno-WIDTHTRUNC \
 		--Mdir $(MODMUL_MDIR) \
-		-top-module tb_modmul_unit \
+		-top-module tb_ModmulUnit \
 		$(MODMUL_TB) \
 		$(MODMUL_SRCS)
 
