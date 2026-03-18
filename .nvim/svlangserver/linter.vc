@@ -1,0 +1,18 @@
+-v /Users/notori/NTT/pipelined-ntt-accelerator/modmul/openNTT/intmul_pkg.sv
+-v /Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl/OpenNTT/intmul_pkg.sv
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/modmul
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/modmul/openNTT
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/modmul/openNTT/modred_wl_mont
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl-gen
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl/OpenNTT
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl/OpenNTT/modred_wl_mont
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/modmul
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/modmul/openNTT
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/modmul/openNTT/modred_wl_mont
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl-gen
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl/OpenNTT
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator/NTT-RTL-gen/rtl/OpenNTT/modred_wl_mont
++incdir+/Users/notori/NTT/pipelined-ntt-accelerator

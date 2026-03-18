@@ -5,7 +5,7 @@
 */
 `timescale 1ns/1ps
 
-module multiply_unit #
+module MultiplyUnit #
 (
     parameter LOGQ = 32,
     parameter [LOGQ-1:0] Q_VALUE = 0, // != 0: q is constant
