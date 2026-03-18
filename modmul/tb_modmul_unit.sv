@@ -11,7 +11,7 @@ module tb_modmul_unit;
 
     reg clk = 1'b0;
     reg [LANES*LOGQ-1:0] a;
-    reg [LANES*LOGQ-1:0] b;
+    reg [LANES*LOGQ-1:0] w;
     reg [31:0] q;
     wire [LANES*LOGQ-1:0] product;
 
@@ -27,36 +27,46 @@ module tb_modmul_unit;
     integer errors;
 
     reg [31:0] ra;
-    reg [31:0] rb;
+    reg [31:0] rw;
     reg [31:0] got;
     reg [31:0] exp;
 
     modmul_unit dut (
         .clk(clk),
         .a(a),
-        .b(b),
+        .w(w),
         .q(q),
         .product(product)
     );
 
     always #5 clk = ~clk;
 
-    function automatic [31:0] mont_ref(
+    function automatic [31:0] std_mult_ref(
         input [31:0] aa,
         input [31:0] bb
     );
-        longint unsigned t0;
-        longint unsigned t1;
+        longint unsigned result;
         begin
-            t0 = (longint'(aa) * longint'(bb)) % longint'(Q_CONST);
-            t1 = (t0 * longint'(R_INV)) % longint'(Q_CONST);
-            mont_ref = t1[31:0];
+            // Standard modular multiplication: (a * b) mod Q
+            result = (longint'(aa) * longint'(bb)) % longint'(Q_CONST);
+            std_mult_ref = result[31:0];
+        end
+    endfunction
+
+    function automatic [31:0] mont_prescale(
+        input [31:0] val
+    );
+        longint unsigned result;
+        begin
+            // Prescale: val * 2^32 mod Q (convert to Montgomery form)
+            result = (longint'(val) * 64'h100000000) % longint'(Q_CONST);
+            mont_prescale = result[31:0];
         end
     endfunction
 
     initial begin
         a = '0;
-        b = '0;
+        w = '0;
         q = '0;
         exp_next = '0;
         val_next = 1'b0;
@@ -72,23 +82,25 @@ module tb_modmul_unit;
             // One startup bubble before feeding real vectors.
             if (vec_idx == 0) begin
                 a = '0;
-                b = '0;
+                w = '0;
                 q = Q_CONST;
                 exp_next = '0;
                 val_next = 1'b0;
             end else if (vec_idx <= TEST_VECTORS) begin
                 for (lane = 0; lane < LANES; lane = lane + 1) begin
                     ra = $urandom() % Q_CONST;
-                    rb = $urandom() % Q_CONST;
+                    rw = $urandom() % Q_CONST;
                     a[lane*LOGQ +: LOGQ] = ra;
-                    b[lane*LOGQ +: LOGQ] = rb;
-                    exp_next[lane*LOGQ +: LOGQ] = mont_ref(ra, rb);
+                    // Prescale twiddle factor w to Montgomery form
+                    w[lane*LOGQ +: LOGQ] = mont_prescale(rw);
+                    // Expected result: standard modular multiplication
+                    exp_next[lane*LOGQ +: LOGQ] = std_mult_ref(ra, rw);
                 end
                 q = Q_CONST;
                 val_next = 1'b1;
             end else begin
                 a = '0;
-                b = '0;
+                w = '0;
                 q = Q_CONST;
                 exp_next = '0;
                 val_next = 1'b0;

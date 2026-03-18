@@ -14,7 +14,7 @@ module multiply_unit #
     parameter INTMUL_LAT = 1, // should be at least 1 (valid only if INTMUL_TYPE="")
     parameter INTMUL_TYPE = "", // options: "", "fpga_auto", "fpga_lut", "fpga_dsp", "custom" (could be fpga IP, fpga-optimized, asic-optimized (i.e., Karatsuba) etc.)
     // modular reduction parameters
-    parameter MODRED_LAT = 0, 
+    parameter MODRED_LAT = 6, 
 	  parameter MODRED_TYPE = "default", // options: "default" (WL Montgomery), "custom", "" (i.e., for sim)
 	  // modular reduction parameters (for default case)
 	  parameter MODRED_L = 2,  // montgomery loop count (calculated as $ceil(LOGQ/WORD_SIZE))
