@@ -11,6 +11,7 @@ integer j;
 genvar i,k;
 wire [WIDTH*N-1: 0] conn [0: LG_N];
 wire flush_unit_en [0: LG_N-1];
+wire [WIDTH*N-1:0] in_padded;
 
 // enable shift register
 wire en_shift_reg_in [0: LG_N-1]; // also enable unit[i]
@@ -65,7 +66,8 @@ for(i=0; i<LG_N; i=i+1) for(k=0;k<(1<<i); k=k+1)
         ,.out(conn[i+1][k*(1<<(LG_N-i))*WIDTH +: (1<<(LG_N-i))*WIDTH])
     );
 endgenerate
-assign conn[0] = in;
+assign in_padded = (nx_state==S_PADDING) ? {WIDTH*N{1'b0}} : in;
+assign conn[0] = in_padded;
 assign out = conn[LG_N];
 
 // fsm logic

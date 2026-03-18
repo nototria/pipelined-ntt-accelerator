@@ -28,6 +28,14 @@ MODMUL_SRCS := \
 	$(MODMUL_DIR)/openNTT/modred_wl_mont/wlmont_sub_p0.sv \
 	$(MODMUL_DIR)/openNTT/modred_wl_mont/wlmont.sv
 
+TRANSPOSE_DIR  := $(ROOT)/transpose
+TRANSPOSE_MDIR := obj_dir/transpose
+TRANSPOSE_TB   := $(TRANSPOSE_DIR)/tb_TransposeUnit.sv
+TRANSPOSE_BIN  := $(TRANSPOSE_MDIR)/Vtb_TransposeUnit
+TRANSPOSE_SRCS := \
+	$(TRANSPOSE_DIR)/TransposeUnit.v \
+	$(TRANSPOSE_DIR)/QuadrantSwap.v
+
 NTT_SUBMODULE_ROOT := $(ROOT)/NTT-RTL-gen
 NTT_SIBLING_ROOT   := $(ROOT_PARENT)/NTT-RTL-gen
 
@@ -90,7 +98,7 @@ ifneq ($(strip $(CYCLES)),)
 RUN_ARGS += $(CYCLES)
 endif
 
-.PHONY: all build run modmul-build modmul-test clean help
+.PHONY: all build run modmul-build modmul-test transpose-build transpose-test clean help
 
 all: run
 
@@ -129,6 +137,27 @@ $(MODMUL_BIN): $(MODMUL_TB) $(MODMUL_SRCS) | $(MODMUL_MDIR)
 modmul-test: modmul-build
 	./$(MODMUL_BIN)
 
+transpose-build: $(TRANSPOSE_BIN)
+
+$(TRANSPOSE_MDIR):
+	mkdir -p $@
+
+$(TRANSPOSE_BIN): $(TRANSPOSE_TB) $(TRANSPOSE_SRCS) | $(TRANSPOSE_MDIR)
+	$(VERILATOR) \
+		-j 0 \
+		--binary \
+		--default-language 1800-2017 \
+		-Wno-fatal \
+		-Wno-WIDTHEXPAND \
+		-Wno-WIDTHTRUNC \
+		--Mdir $(TRANSPOSE_MDIR) \
+		-top-module tb_TransposeUnit \
+		$(TRANSPOSE_TB) \
+		$(TRANSPOSE_SRCS)
+
+transpose-test: transpose-build
+	./$(TRANSPOSE_BIN)
+
 clean:
 	rm -rf obj_dir
 
@@ -137,4 +166,5 @@ help:
 	@echo "  make build MODE=dit|dif"
 	@echo "  make run MODE=dit|dif [INPUT=path/to/input.hex] [CYCLES=36]"
 	@echo "  make modmul-test"
+	@echo "  make transpose-test"
 	@echo "  make clean"
