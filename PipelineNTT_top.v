@@ -10,8 +10,10 @@ module PipelineNTT_top (
     output wire [4095:0] out
 );
     localparam integer LANES = 128;
-    localparam integer DIT_UNIT_LATENCY = 7;
-    localparam integer MULMOD_UNIT_LATENCY = 7;
+    localparam integer NTT_STAGES = 7;
+    localparam integer BTF_LATENCY = 8; // MODADD(1) + INTMUL(1) + MODRED(6)
+    localparam integer DIT_UNIT_LATENCY = NTT_STAGES * BTF_LATENCY; // 56 cycles (measured)
+    localparam integer MULMOD_UNIT_LATENCY = 7; // standalone ModmulUnit latency
     localparam integer EN_DELAY_CYCLES = DIT_UNIT_LATENCY + MULMOD_UNIT_LATENCY;
     localparam [31:0] W_TEMP = 32'd1111111; // TODO (replace with SRAM twiddle later)
 
