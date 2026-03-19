@@ -2,15 +2,13 @@ VERILATOR ?= verilator
 ROOT      := $(abspath .)
 ROOT_PARENT := $(abspath $(ROOT)/..)
 
-TOP     ?= PipelineNTT_top
-MODE    ?= dit
-INPUT   ?=
-CYCLES  ?=
+TOP := PipelineNTT_top
 
-TOP_V   := $(ROOT)/PipelineNTT_top.v
-TB_CPP  := $(ROOT)/testbench.cpp
-MDIR    := obj_dir/$(MODE)
-BIN     := $(MDIR)/V$(TOP)
+PIPELINE_TB   := $(ROOT)/tb_PipelineNTT_top.sv
+PIPELINE_MDIR := obj_dir/pipeline
+PIPELINE_BIN  := $(PIPELINE_MDIR)/Vtb_PipelineNTT_top
+
+TOP_V := $(ROOT)/PipelineNTT_top.v
 
 MODMUL_DIR  := $(ROOT)/modmul
 MODMUL_MDIR := obj_dir/modmul
@@ -59,6 +57,10 @@ OPENNTT_REL_SRCS := \
 	rtl/OpenNTT/modsub.sv \
 	rtl/OpenNTT/modred.sv \
 	rtl/OpenNTT/intmul.sv \
+	rtl/OpenNTT/csa_3to2.sv \
+	rtl/OpenNTT/csa_6to3.sv \
+	rtl/OpenNTT/csa_tree_3to2.sv \
+	rtl/OpenNTT/csa_tree_6to3.sv \
 	rtl/OpenNTT/btf_addsub.sv \
 	rtl/OpenNTT/btf_modmul.sv \
 	rtl/OpenNTT/btf_uni.sv \
@@ -71,50 +73,48 @@ GEN_NTT_SRCS := \
 	$(NTT_ROOT)/rtl-gen/dit_ntt.v \
 	$(NTT_ROOT)/rtl-gen/dif_ntt.v
 
-VERILATOR_FLAGS := \
-	-j 0 \
-	--cc --exe --build \
-	--default-language 1800-2017 \
-	-I$(NTT_BASE) \
-	-Wno-fatal \
-	-Wno-TIMESCALEMOD \
-	-Wno-WIDTHEXPAND \
-	--Mdir $(MDIR) \
-	-top-module $(TOP)
+PIPELINE_SRCS := \
+	$(PIPELINE_TB) \
+	$(TOP_V) \
+	$(MODMUL_DIR)/ModmulUnit.v \
+	$(MODMUL_DIR)/MultiplyUnit.v \
+	$(TRANSPOSE_DIR)/TransposeUnit.v \
+	$(TRANSPOSE_DIR)/QuadrantSwap.v \
+	$(GEN_NTT_SRCS) \
+	$(OPENNTT_SRCS)
 
-ifeq ($(MODE),dit)
-MODE_DEFINE :=
-else ifeq ($(MODE),dif)
-MODE_DEFINE := -DPIPELINE_NTT_USE_DIF
-else
-$(error MODE must be "dit" or "dif")
-endif
+.PHONY: all build run pipeline-build pipeline-test modmul-build modmul-test transpose-build transpose-test clean help
 
-RUN_ARGS :=
-ifneq ($(strip $(INPUT)),)
-RUN_ARGS += $(INPUT)
-endif
-ifneq ($(strip $(CYCLES)),)
-RUN_ARGS += $(CYCLES)
-endif
+all: pipeline-test
 
-.PHONY: all build run modmul-build modmul-test transpose-build transpose-test clean help
+build: pipeline-build
 
-all: run
-
-build: $(BIN)
+run: pipeline-test
 
 $(GEN_NTT_SRCS):
 	$(MAKE) -C $(NTT_ROOT) rtl-gen/dit_ntt.v rtl-gen/dif_ntt.v
 
-$(MDIR):
+$(PIPELINE_MDIR):
 	mkdir -p $@
 
-$(BIN): $(TOP_V) $(TB_CPP) $(OPENNTT_SRCS) $(GEN_NTT_SRCS) | $(MDIR)
-	$(VERILATOR) $(VERILATOR_FLAGS) $(MODE_DEFINE) $(TOP_V) $(TB_CPP) $(OPENNTT_SRCS)
+$(PIPELINE_BIN): $(PIPELINE_SRCS) | $(PIPELINE_MDIR)
+	$(VERILATOR) \
+		-j 0 \
+		--binary \
+		--default-language 1800-2017 \
+		-I$(NTT_BASE) \
+		-Wno-fatal \
+		-Wno-TIMESCALEMOD \
+		-Wno-WIDTHEXPAND \
+		-Wno-WIDTHTRUNC \
+		--Mdir $(PIPELINE_MDIR) \
+		-top-module tb_PipelineNTT_top \
+		$(PIPELINE_SRCS)
 
-run: $(BIN)
-	./$(BIN) $(RUN_ARGS)
+pipeline-build: $(PIPELINE_BIN)
+
+pipeline-test: pipeline-build
+	./$(PIPELINE_BIN)
 
 modmul-build: $(MODMUL_BIN)
 
@@ -163,8 +163,9 @@ clean:
 
 help:
 	@echo "Targets:"
-	@echo "  make build MODE=dit|dif"
-	@echo "  make run MODE=dit|dif [INPUT=path/to/input.hex] [CYCLES=36]"
+	@echo "  make build           # build pipeline top testbench"
+	@echo "  make run             # build and run pipeline top testbench"
+	@echo "  make pipeline-test   # run tb_PipelineNTT_top"
 	@echo "  make modmul-test"
 	@echo "  make transpose-test"
 	@echo "  make clean"
