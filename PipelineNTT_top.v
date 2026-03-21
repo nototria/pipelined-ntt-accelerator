@@ -4,8 +4,9 @@ module PipelineNTT_top (
     input  wire          clk,
     input  wire          rst_n,
     input  wire          en,
-    // input  wire       forward, TODO: support forward/inverse NTT selection
+    input  wire       forward,
     input  wire [31:0]   Q,
+    input  wire [8191:0] psi_k,
     input  wire [4095:0] in,
     output wire [4095:0] out
 );
@@ -36,6 +37,9 @@ module PipelineNTT_top (
 
     dit_ntt u_dit_ntt (
         .clk(clk),
+        .inv(!forward),
+        .q(Q),
+        .psi_k(psi_k),
         .in(in),
         .out(dit_out)
     );
@@ -59,6 +63,9 @@ module PipelineNTT_top (
 
     dif_ntt u_dif_ntt (
         .clk(clk),
+        .inv(!forward),
+        .q(Q),
+        .psi_k(psi_k),
         .in(tr_out),
         .out(out)
     );
