@@ -21,8 +21,8 @@ wire [32*128-1: 0] out;
 always #5 clk=~clk;
 
 initial begin
-    $dumpfile("tb_top.vcd");
-    $dumpvars(0, tb_PipelineNTT_top);
+    // $dumpfile("tb_top.vcd");
+    // $dumpvars(0, tb_PipelineNTT_top);
     inv = $test$plusargs("inv");
     $readmemh("/tmp/tmp.hex", mtx);
     clk = 0;
@@ -40,8 +40,8 @@ end
 always @(posedge clk) begin
     if(out_valid) begin
         // output
-        // for(i=0; i<128; i=i+1) $write("%d ", out[i*32 +: 32]);
-        // $display();
+        for(i=0; i<128; i=i+1) $write("%d ", out[i*32 +: 32]);
+        $display();
     end
 end
 

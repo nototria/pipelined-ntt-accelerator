@@ -58,13 +58,6 @@ module PipelineNTT_top (
         .product(mod_mul_out)
     );
 
-    always @(posedge clk) begin
-        if(tr_en) begin
-            for(i=0;i<128;i=i+1) $write("%d ", mod_mul_out[i*32 +:32]);
-            $display();
-        end
-    end
-
     TransposeUnit #(.LG_N(7)) m_tr_unit (
         .clk(clk),
         .rst_n(rst_n),
@@ -73,6 +66,13 @@ module PipelineNTT_top (
         .out(tr_out),
         .out_valid(tr_out_valid)
     );
+
+    // always @(posedge clk) begin
+    //     if(1) begin
+    //         for(i=0;i<128;i=i+1) $write("%d ", out[i*32 +:32]);
+    //         $display();
+    //     end
+    // end
 
     dif_ntt u_dif_ntt (
         .clk(clk),

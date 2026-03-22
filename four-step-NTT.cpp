@@ -36,26 +36,12 @@ signed main(signed argc, char **argv){
         else ctx->ncn(buffer1[i], buffer2[i]);
     }
     // mod mul (skip)
-    // output after mod mul
-    for(int i=0; i<ctx->N; ++i){
-        for(int j=0; j<ctx->N; ++j){
-            cout<<setw(10)<<buffer2[i][j]<<' ';
-        }
-        cout<<'\n';
-    }
     // transpose
     for(int i=0; i<ctx->N; ++i){
         for(int j=0; j<ctx->N; ++j){
             buffer1[i][j]=buffer2[j][i];
         }
     }
-    // output after transpose
-    // for(int i=0; i<ctx->N; ++i){
-    //     for(int j=0; j<ctx->N; ++j){
-    //         cout<<setw(10)<<buffer1[i][j]<<' ';
-    //     }
-    //     cout<<'\n';
-    // }
     // second NTT
     for(int i=0; i<ctx->N; ++i){
         if(inv_flag){
@@ -69,12 +55,12 @@ signed main(signed argc, char **argv){
         else ctx->ntt(buffer1[i], buffer2[i]);
     }
     // output
-    // for(int i=0; i<ctx->N; ++i){
-    //     for(int j=0; j<ctx->N; ++j){
-    //         cout<<setw(10)<<buffer2[i][j]<<' ';
-    //     }
-    //     cout<<'\n';
-    // }
+    for(int i=0; i<ctx->N; ++i){
+        for(int j=0; j<ctx->N; ++j){
+            cout<<setw(10)<<buffer2[i][j]<<' ';
+        }
+        cout<<'\n';
+    }
 
     delete ctx;
     return 0;

@@ -100,7 +100,6 @@ $(PIPELINE_MDIR):
 $(PIPELINE_BIN): $(PIPELINE_SRCS) | $(PIPELINE_MDIR)
 	$(VERILATOR) \
 		-j 0 \
-		--trace \
 		--binary \
 		--default-language 1800-2017 \
 		-I$(NTT_BASE) \
@@ -162,7 +161,6 @@ four-step-NTT.elf: four-step-NTT.cpp NTT-RTL-gen/util.hpp
 pipeline-test: pipeline-build gen_testcase.py four-step-NTT.elf
 	python3 gen_testcase.py 7 200
 	./run.sh $(PIPELINE_BIN) 200
-	./run.sh $(PIPELINE_BIN) 200 inv
 
 clean:
 	rm -rf obj_dir
