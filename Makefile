@@ -4,7 +4,7 @@ ROOT_PARENT := $(abspath $(ROOT)/..)
 
 TOP := PipelineNTT_top
 
-PIPELINE_TB   := $(ROOT)/tb_PipelineNTT_top.sv
+PIPELINE_TB   := $(ROOT)/tb_PipelineNTT_top.v
 PIPELINE_MDIR := obj_dir/pipeline
 PIPELINE_BIN  := $(PIPELINE_MDIR)/Vtb_PipelineNTT_top
 
@@ -100,6 +100,7 @@ $(PIPELINE_MDIR):
 $(PIPELINE_BIN): $(PIPELINE_SRCS) | $(PIPELINE_MDIR)
 	$(VERILATOR) \
 		-j 0 \
+		--trace \
 		--binary \
 		--default-language 1800-2017 \
 		-I$(NTT_BASE) \
@@ -112,9 +113,6 @@ $(PIPELINE_BIN): $(PIPELINE_SRCS) | $(PIPELINE_MDIR)
 		$(PIPELINE_SRCS)
 
 pipeline-build: $(PIPELINE_BIN)
-
-pipeline-test: pipeline-build
-	./$(PIPELINE_BIN)
 
 modmul-build: $(MODMUL_BIN)
 
@@ -157,6 +155,14 @@ $(TRANSPOSE_BIN): $(TRANSPOSE_TB) $(TRANSPOSE_SRCS) | $(TRANSPOSE_MDIR)
 
 transpose-test: transpose-build
 	./$(TRANSPOSE_BIN)
+
+four-step-NTT.elf: four-step-NTT.cpp NTT-RTL-gen/util.hpp
+	g++ -O3 -std=c++17 -Wall -pipe $< -o $@
+
+pipeline-test: pipeline-build gen_testcase.py four-step-NTT.elf
+	python3 gen_testcase.py 7 200
+	./run.sh $(PIPELINE_BIN) 200
+	./run.sh $(PIPELINE_BIN) 200 inv
 
 clean:
 	rm -rf obj_dir
