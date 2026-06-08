@@ -14,6 +14,7 @@ reg [32*128-1 :0] mtx [0: 127];
 reg [31:0] cnt;
 
 // ntt module
+wire reg_we;
 reg inv;
 wire out_valid;
 wire [32*128-1: 0] out;
@@ -58,6 +59,7 @@ always @(posedge clk) begin
     if(trig_cnt==4'b0011) rst_n <= 1;
     if(trig_cnt==4'b0111) en <= 1;
 end
+assign reg_we = trig_cnt==4'b0100;
 
 PipelineNTT_top m_unit(
     .clk(clk),
@@ -65,7 +67,9 @@ PipelineNTT_top m_unit(
     .en(en),
     .inv(inv),
     .Q(`Q_CONST),
+    .Q_we(reg_we),
     .psi_k(`PSI_K_128),
+    .psi_k_we(reg_we),
     .in(mtx[cnt]),
     .out(out),
     .out_valid(out_valid)
