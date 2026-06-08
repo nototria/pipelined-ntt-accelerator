@@ -6,7 +6,9 @@ module PipelineNTT_top (
     input  wire          en,
     input  wire          inv,
     input  wire [31:0]   Q,
+    input  wire          Q_we,
     input  wire [8191:0] psi_k,
+    input  wire          psi_k_we,
     input  wire [4095:0] in,
     output wire [4095:0] out,
     output wire          out_valid
@@ -20,6 +22,13 @@ module PipelineNTT_top (
     localparam integer EN_DELAY_CYCLES = DIT_UNIT_LATENCY + MULMOD_UNIT_LATENCY;
     localparam [31:0] W_TEMP = 32'd301989884; // TODO (replace with SRAM twiddle later)
 
+    reg [8191:0] psi_k_reg;
+    reg [31:0] Q_reg;
+    always @(posedge clk) begin
+        if(Q_we) Q_reg <= Q;
+        if(psi_k_we) psi_k_reg <= psi_k;
+    end
+    
     wire [32*LANES-1:0] dit_out;
     wire [32*LANES-1:0] mod_mul_out;
     wire [32*LANES-1:0] tr_out;
@@ -44,8 +53,8 @@ module PipelineNTT_top (
     dit_ntt u_dit_ntt (
         .clk(clk),
         .inv(inv),
-        .q(Q),
-        .psi_k(psi_k),
+        .q(Q_reg),
+        .psi_k(psi_k_reg),
         .in(in),
         .out(dit_out)
     );
@@ -54,7 +63,7 @@ module PipelineNTT_top (
         .clk(clk),
         .a(dit_out),
         .w({LANES{W_TEMP}}),
-        .q(Q),
+        .q(Q_reg),
         .product(mod_mul_out)
     );
 
@@ -77,8 +86,8 @@ module PipelineNTT_top (
     dif_ntt u_dif_ntt (
         .clk(clk),
         .inv(inv),
-        .q(Q),
-        .psi_k(psi_k),
+        .q(Q_reg),
+        .psi_k(psi_k_reg),
         .in(tr_out),
         .out(out)
     );
